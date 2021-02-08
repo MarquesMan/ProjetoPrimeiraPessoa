@@ -36,6 +36,7 @@ public class Weapon : MonoBehaviour
 
     public void Fire()
     {
+
         StartCoroutine(ShotFired());
 
         Vector3 rayOrigin = mainCamera.ViewportToWorldPoint(midScreenVector);
