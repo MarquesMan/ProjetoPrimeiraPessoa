@@ -15,10 +15,14 @@ public class PlayerInteract : MonoBehaviour
 
     private float currentTime = 0f;
 
+    private DecalController decalController;
+
     // Start is called before the first frame update
     void Start()
     {
-        if(currentWeapon)
+        decalController = GetComponent<DecalController>();
+
+        if (currentWeapon)
         {
             hasWeapon = true;
             currentWeaponRateOfFire = currentWeapon.fireRate;
@@ -31,10 +35,18 @@ public class PlayerInteract : MonoBehaviour
     {
         currentTime = Time.time;
 
-        if (hasWeapon && Input.GetButton("Fire1") && currentTime > nextFireTime)
-        {
-            nextFireTime = currentTime + currentWeaponRateOfFire;
-            currentWeapon.Fire(); // Dispare a arma
+        if (hasWeapon)
+        {   
+            if (Input.GetButton("Fire1") && currentTime > nextFireTime)
+            {
+                nextFireTime = currentTime + currentWeaponRateOfFire;
+                RaycastHit hit = currentWeapon.Fire(); // Dispare a arma
+                decalController.SpawnDecal(hit);
+            }
+            else if (Input.GetButtonUp("Fire2") || Input.GetButtonDown("Fire2") || Input.GetButton("Fire2"))
+            {
+                currentWeapon.SecondaryFire(Input.GetButtonDown("Fire2") || Input.GetButton("Fire2"));
+            }
         }
     }
 }

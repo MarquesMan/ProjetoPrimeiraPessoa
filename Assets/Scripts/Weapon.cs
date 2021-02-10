@@ -12,6 +12,8 @@ public class Weapon : MonoBehaviour
                   weaponRange = 50f,
                   hitForce = 100f;
 
+    private bool lastSecondaryInput = true;
+
     public Transform muzzle;
 
     private Camera mainCamera;
@@ -25,6 +27,12 @@ public class Weapon : MonoBehaviour
 
     public float fireRate = 0.5f;
 
+    [SerializeField]
+    private ParticleSystem MuzzlePS, CaseEjectPS;
+
+    [SerializeField]
+    private GameObject flameThrower;
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -32,9 +40,10 @@ public class Weapon : MonoBehaviour
         gunAudioSrc = GetComponent<AudioSource>();
         mainCamera = GetComponentInParent<Camera>(); //Camera.main;
         laserLine = GetComponent<LineRenderer>();
+        SecondaryFire();
     }
 
-    public void Fire()
+    public RaycastHit Fire()
     {
 
         StartCoroutine(ShotFired());
@@ -61,15 +70,35 @@ public class Weapon : MonoBehaviour
         {
             laserLine.SetPosition(1, rayOrigin + (mainCamera.transform.forward*weaponRange));
         }
+
+        return hit;
+
+    }
+
+    public void SecondaryFire(bool buttonIsPressed = false)
+    {
+
+        if (buttonIsPressed == lastSecondaryInput)
+            return;
+
+        lastSecondaryInput = buttonIsPressed;
+        foreach (ParticleSystem ps in flameThrower.GetComponentsInChildren<ParticleSystem>())
+        {
+            var emission = ps.emission;
+            emission.enabled = buttonIsPressed;
+            // ps.emission = emission;
+        }
     }
 
     private IEnumerator ShotFired()
     {
+        MuzzlePS?.Play(); // Dispara efeito de tiro
         gunAudioSrc.Play();
         laserLine.enabled = true;
 
         yield return shotDuration;
 
+        CaseEjectPS?.Play();
         laserLine.enabled = false;
     }
 }

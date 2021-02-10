@@ -29,7 +29,6 @@ public class AIController : MonoBehaviour
             agent.SetDestination(target.position);
         
         animator.SetFloat("Walk", agent.velocity.magnitude/agent.speed);
-        Debug.Log(agent.velocity.magnitude / agent.speed);
     }
 
 
