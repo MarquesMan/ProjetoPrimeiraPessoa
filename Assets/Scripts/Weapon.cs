@@ -62,8 +62,11 @@ public class Weapon : MonoBehaviour
             // Seta o fim do raio na posicao de hit
             laserLine.SetPosition(1, hit.point);
 
-            HealthSystem health = hit.collider.GetComponent<HealthSystem>();
+            HealthSystem health = hit.collider.GetComponentInParent<HealthSystem>();
             health?.Damage(gunDmg);
+
+            // Adiciona forca, havia esquecido do hit force
+            hit.rigidbody?.AddForce(-hit.normal * hitForce);
 
         }
         else

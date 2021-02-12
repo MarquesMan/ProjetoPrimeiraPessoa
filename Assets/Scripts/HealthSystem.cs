@@ -11,6 +11,8 @@ public class HealthSystem : MonoBehaviour
 
     private AudioSource audioSrc;
 
+    private bool isDead = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -21,10 +23,12 @@ public class HealthSystem : MonoBehaviour
     {
         currentHealth = currentHealth - dmg;
 
-        if (currentHealth <= 0f)
+        if (!isDead && currentHealth <= 0f)
         {
+            isDead = true;
             audioSrc.Play();
-            Destroy(this.gameObject, audioSrc.clip.length);
+            GetComponent<AIController>()?.MegaDeath();
+            // Destroy(this.gameObject, audioSrc.clip.length);
         }
     }
 }

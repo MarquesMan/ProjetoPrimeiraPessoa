@@ -41,7 +41,9 @@ public class PlayerInteract : MonoBehaviour
             {
                 nextFireTime = currentTime + currentWeaponRateOfFire;
                 RaycastHit hit = currentWeapon.Fire(); // Dispare a arma
-                decalController.SpawnDecal(hit);
+
+                if(hit.distance > 0)
+                    decalController.SpawnDecal(hit);
             }
             else if (Input.GetButtonUp("Fire2") || Input.GetButtonDown("Fire2") || Input.GetButton("Fire2"))
             {

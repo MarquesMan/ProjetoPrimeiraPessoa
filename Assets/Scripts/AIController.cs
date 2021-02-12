@@ -18,10 +18,27 @@ public class AIController : MonoBehaviour
 
         agent.updateRotation = true;
         agent.updatePosition = true;
-        transform.localScale = new Vector3(1f, 1f, -1f);
+        // transform.localScale = new Vector3(1f, 1f, -1f);
         animator = GetComponent<Animator>();
+
+        SetRagdoll(false);
+
     }
 
+    private void SetRagdoll(bool isRagdoll)
+    {
+        foreach (Rigidbody bodyPart in GetComponentsInChildren<Rigidbody>())
+            bodyPart.isKinematic = !isRagdoll;
+    }
+
+    public void MegaDeath()
+    {
+        agent.enabled = false;
+        target = null;
+        SetRagdoll(true);
+        if(animator)
+            animator.enabled = false;
+    }
 
     private void Update()
     {
