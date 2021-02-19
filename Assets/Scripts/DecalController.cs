@@ -1,90 +1,82 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
+
+public enum DecalType
+{
+	woodType,
+	waterType,
+	fleshType,
+	stoneType,
+	metalType,
+	defaultType
+}
 
 public class DecalController : MonoBehaviour
 {
 	[SerializeField]
-	[Tooltip("The prefab for the bullet hole")]
-	private GameObject bulletHoleDecalPrefab;
+	private GameObject	woodType,
+						waterType,
+						fleshType,
+						stoneType,
+						metalType,
+						defaultType;
+
+	private Dictionary<DecalType, CustomDecal> decalTypeToCustomDecal;
+	private Dictionary<string, DecalType> materialNameToDecalType;
 
 	[SerializeField]
 	[Tooltip("The number of decals to keep alive at a time.  After this number are around, old ones will be replaced.")]
 	private int maxConcurrentDecals = 10;
 
-	private Queue<GameObject> decalsInPool;
-	private Queue<GameObject> decalsActiveInWorld;
-
 	private void Awake()
 	{
+		decalTypeToCustomDecal	= new Dictionary<DecalType, CustomDecal>();
+		materialNameToDecalType = new Dictionary<string, DecalType>();
+
 		InitializeDecals();
 	}
 
 	private void InitializeDecals()
 	{
-		decalsInPool = new Queue<GameObject>();
-		decalsActiveInWorld = new Queue<GameObject>();
+		// Define tipos
+		insertDecalType(DecalType.defaultType,	defaultType);
+		insertDecalType(DecalType.fleshType,	fleshType);
+		insertDecalType(DecalType.stoneType,	stoneType);
+		insertDecalType(DecalType.waterType,	waterType);
+		insertDecalType(DecalType.woodType,		woodType);
+		insertDecalType(DecalType.metalType, metalType);
 
-		for (int i = 0; i < maxConcurrentDecals; i++)
-		{
-			InstantiateDecal();
-		}
+		// Define relacao material tipo
+		materialNameToDecalType["Meat"] = DecalType.fleshType;
+		materialNameToDecalType["Wood"] = DecalType.woodType;
+		materialNameToDecalType["WaterFilled"] = DecalType.waterType;
+		materialNameToDecalType["Stone"] = DecalType.stoneType;
+		materialNameToDecalType["Metal"] = DecalType.metalType;
+
 	}
 
-	private void InstantiateDecal()
-	{
-		var spawned = GameObject.Instantiate(bulletHoleDecalPrefab);
-		spawned.transform.SetParent(this.transform);
+	private void insertDecalType(DecalType decalType, GameObject gameObjectType)
+    {
+		decalTypeToCustomDecal[decalType] = new CustomDecal(gameObjectType, maxConcurrentDecals, this.transform);
 
-		decalsInPool.Enqueue(spawned);
-		spawned.SetActive(false);
 	}
 
 	public void SpawnDecal(RaycastHit hit)
 	{
-		GameObject decal = GetNextAvailableDecal();
-		if (decal != null)
-		{
-			decal.transform.position = hit.point;
-			decal.transform.SetParent(hit.collider.transform);
-			decal.transform.rotation = Quaternion.FromToRotation(Vector3.forward, hit.normal);
 
-			decal.SetActive(true);
+		DecalType decalType;
 
-			decalsActiveInWorld.Enqueue(decal);
+		if (hit.collider.sharedMaterial is null)
+			decalType = DecalType.defaultType;
+		else if (!materialNameToDecalType.TryGetValue(hit.collider.sharedMaterial.name, out decalType))
+        {
+			decalType = DecalType.defaultType;
+			materialNameToDecalType[hit.collider.sharedMaterial.name] = decalType;
 		}
+
+		decalTypeToCustomDecal[decalType].SpawnDecal(hit);
+
 	}
 
-	private GameObject GetNextAvailableDecal()
-	{
-		if (decalsInPool.Count > 0)
-			return decalsInPool.Dequeue();
-
-		var oldestActiveDecal = decalsActiveInWorld.Dequeue();
-		return oldestActiveDecal;
-	}
-
-#if UNITY_EDITOR
-
-	private void Update()
-	{
-		if (transform.childCount < maxConcurrentDecals)
-			InstantiateDecal();
-		else if (ShoudlRemoveDecal())
-			DestroyExtraDecal();
-	}
-
-	private bool ShoudlRemoveDecal()
-	{
-		return transform.childCount > maxConcurrentDecals;
-	}
-
-	private void DestroyExtraDecal()
-	{
-		if (decalsInPool.Count > 0)
-			Destroy(decalsInPool.Dequeue());
-		else if (ShoudlRemoveDecal() && decalsActiveInWorld.Count > 0)
-			Destroy(decalsActiveInWorld.Dequeue());
-	}
-
-#endif
 }
